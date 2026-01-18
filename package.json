@@ -1,14 +1,13 @@
 {
-  "name": "ai-chat-claude",
+  "name": "ai-chat",
   "version": "1.0.0",
   "private": true,
-  "homepage": "/",
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-scripts": "^5.0.1",
-    "lucide-react": "^0.344.0",
-    "typescript": "^5.0.0"
+    "react-scripts": "5.0.1",
+    "typescript": "^4.9.5",
+    "lucide-react": "^0.344.0"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -29,7 +28,6 @@
     ]
   },
   "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=9.0.0"
+    "node": ">=18.0.0"
   }
 }

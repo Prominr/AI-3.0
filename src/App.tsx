@@ -1,14 +1,5 @@
-import React, { useState, useRef, useEffect, ChangeEvent, KeyboardEvent } from 'react';
-
-// Icons - using emojis instead of lucide-react to simplify
-const Icons = {
-  Send: () => <span>➤</span>,
-  Image: () => <span>🖼️</span>,
-  X: () => <span>✕</span>,
-  Bot: () => <span>🤖</span>,
-  User: () => <span>👤</span>,
-  Trash: () => <span>🗑️</span>
-};
+import React, { useState, useRef, useEffect } from 'react';
+import { Send, Image, X, Bot, User, Trash2 } from 'lucide-react';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -17,49 +8,24 @@ interface Message {
   timestamp: Date;
 }
 
-type ResponseMode = 'fast' | 'expert';
-
 export default function App() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [responseMode, setResponseMode] = useState<ResponseMode>('fast');
+  const [responseMode, setResponseMode] = useState<'fast' | 'expert'>('fast');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-scroll
-  useEffect(() => {
+  const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
   }, [messages]);
 
-  // Image paste handler
-  useEffect(() => {
-    const handlePaste = (e: ClipboardEvent) => {
-      const items = e.clipboardData?.items;
-      if (!items) return;
-
-      for (let i = 0; i < items.length; i++) {
-        if (items[i].type.indexOf('image') !== -1) {
-          const file = items[i].getAsFile();
-          if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-              setImagePreview(reader.result as string);
-            };
-            reader.readAsDataURL(file);
-          }
-          break;
-        }
-      }
-    };
-
-    window.addEventListener('paste', handlePaste);
-    return () => window.removeEventListener('paste', handlePaste);
-  }, []);
-
-  // Image upload
-  const handleImageSelect = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && file.type.startsWith('image/')) {
       const reader = new FileReader();
@@ -70,49 +36,45 @@ export default function App() {
     }
   };
 
-  // Remove image
   const removeImage = () => {
     setImagePreview(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  // Clear chat
   const clearChat = () => {
     setMessages([]);
   };
 
-  // Simulate AI response (replace with real API)
   const simulateAIResponse = async (userInput: string): Promise<string> => {
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 800));
     
-    const responses = {
-      fast: [
-        "Yo, that's interesting! Tell me more.",
-        "Hmm, good question. Let me think...",
-        "Okay so basically...",
-        "Honestly? Not sure about that one chief.",
-        "That's wild! 😂"
-      ],
-      expert: [
-        "Based on my analysis, there are several factors to consider...",
-        "This is a complex topic that requires understanding of multiple domains...",
-        "From a technical perspective, the underlying mechanisms involve...",
-        "Historically speaking, this pattern has emerged due to...",
-        "Let me provide a comprehensive breakdown of this subject..."
-      ]
-    };
-
-    const modeResponses = responseMode === 'fast' ? responses.fast : responses.expert;
-    return modeResponses[Math.floor(Math.random() * modeResponses.length)];
+    if (responseMode === 'fast') {
+      const responses = [
+        "Yo! What's up?",
+        "Hmm interesting... tell me more!",
+        "That's cool! 😎",
+        "Not sure about that one tbh",
+        "Aight, I got you"
+      ];
+      return responses[Math.floor(Math.random() * responses.length)];
+    } else {
+      const responses = [
+        "Based on my analysis, there are multiple factors to consider...",
+        "This requires understanding of several key principles...",
+        "Let me provide a comprehensive explanation...",
+        "From a technical perspective, the underlying mechanism involves...",
+        "I can offer detailed insights on this topic..."
+      ];
+      return responses[Math.floor(Math.random() * responses.length)];
+    }
   };
 
-  // Send message
   const handleSend = async () => {
     if (!input.trim() && !imagePreview) return;
 
     const userMessage: Message = {
       role: 'user',
-      content: input || (imagePreview ? '(sent an image)' : ''),
+      content: input || '(sent an image)',
       image: imagePreview,
       timestamp: new Date()
     };
@@ -121,7 +83,6 @@ export default function App() {
     setInput('');
     setLoading(true);
 
-    // Simulate API call
     const aiResponse = await simulateAIResponse(input);
     
     const assistantMessage: Message = {
@@ -135,104 +96,156 @@ export default function App() {
     removeImage();
   };
 
-  // Enter key handler
-  const handleKeyPress = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
   };
 
+  const styles = {
+    container: {
+      display: 'flex',
+      flexDirection: 'column' as const,
+      height: '100vh',
+      backgroundColor: '#111827'
+    },
+    header: {
+      backgroundColor: '#1f2937',
+      padding: '1rem',
+      borderBottom: '1px solid #374151'
+    },
+    chatArea: {
+      flex: 1,
+      overflow: 'auto' as const,
+      padding: '1rem'
+    },
+    messageBubble: {
+      maxWidth: '70%',
+      padding: '1rem',
+      borderRadius: '1rem',
+      marginBottom: '0.5rem'
+    },
+    inputArea: {
+      backgroundColor: '#1f2937',
+      padding: '1rem',
+      borderTop: '1px solid #374151'
+    }
+  };
+
   return (
-    <div className="flex flex-col h-screen bg-gray-900 text-white">
+    <div style={styles.container}>
       {/* Header */}
-      <div className="bg-gray-800 p-4 border-b border-gray-700">
-        <div className="flex justify-between items-center mb-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center">
-              <span className="text-xl">🤖</span>
+      <div style={styles.header}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '50%', background: 'linear-gradient(to right, #8b5cf6, #ec4899)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Bot size={20} color="white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold">AI Assistant</h1>
-              <p className="text-sm text-gray-400">TypeScript + React</p>
+              <div style={{ fontWeight: 'bold', fontSize: '1.25rem' }}>AI Assistant</div>
+              <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>TypeScript + React</div>
             </div>
           </div>
-          <button
+          <button 
             onClick={clearChat}
-            className="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg"
-            title="Clear chat"
+            style={{ padding: '0.5rem', backgroundColor: '#374151', border: '1px solid #4b5563', borderRadius: '0.5rem', color: '#d1d5db', cursor: 'pointer' }}
           >
-            <Icons.Trash />
+            <Trash2 size={20} />
           </button>
         </div>
 
         {/* Mode selector */}
-        <div className="flex gap-2">
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
           <button
             onClick={() => setResponseMode('fast')}
-            className={`flex-1 py-2 rounded-lg ${responseMode === 'fast' ? 'bg-purple-600' : 'bg-gray-700'}`}
+            style={{
+              flex: 1,
+              padding: '0.5rem',
+              borderRadius: '0.5rem',
+              border: 'none',
+              backgroundColor: responseMode === 'fast' ? '#8b5cf6' : '#374151',
+              color: 'white',
+              cursor: 'pointer'
+            }}
           >
-            ⚡ Fast
+            ⚡ Fast Mode
           </button>
           <button
             onClick={() => setResponseMode('expert')}
-            className={`flex-1 py-2 rounded-lg ${responseMode === 'expert' ? 'bg-purple-600' : 'bg-gray-700'}`}
+            style={{
+              flex: 1,
+              padding: '0.5rem',
+              borderRadius: '0.5rem',
+              border: 'none',
+              backgroundColor: responseMode === 'expert' ? '#8b5cf6' : '#374151',
+              color: 'white',
+              cursor: 'pointer'
+            }}
           >
-            🎓 Expert
+            🎓 Expert Mode
           </button>
         </div>
       </div>
 
       {/* Chat messages */}
-      <div className="flex-1 overflow-auto p-4 space-y-4">
+      <div style={styles.chatArea}>
         {messages.length === 0 ? (
-          <div className="h-full flex items-center justify-center">
-            <div className="text-center">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center mx-auto mb-4">
-                <span className="text-3xl">🤖</span>
+          <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ width: '5rem', height: '5rem', borderRadius: '50%', background: 'linear-gradient(to right, #8b5cf6, #ec4899)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
+                <Bot size={40} color="white" />
               </div>
-              <h2 className="text-2xl font-bold mb-2">Start chatting</h2>
-              <p className="text-gray-400">Type a message or paste an image</p>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>Start a conversation</h2>
+              <p style={{ color: '#9ca3af' }}>Type a message to begin chatting</p>
             </div>
           </div>
         ) : (
           <>
             {messages.map((msg, idx) => (
-              <div key={idx} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div key={idx} style={{ display: 'flex', gap: '0.75rem', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start', marginBottom: '1rem' }}>
                 {msg.role === 'assistant' && (
-                  <div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center">
-                    <Icons.Bot />
+                  <div style={{ width: '2rem', height: '2rem', borderRadius: '50%', backgroundColor: '#8b5cf6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Bot size={16} color="white" />
                   </div>
                 )}
                 
-                <div className={`max-w-[70%] rounded-2xl p-4 ${msg.role === 'user' ? 'bg-blue-600' : 'bg-gray-800'}`}>
+                <div style={{
+                  ...styles.messageBubble,
+                  backgroundColor: msg.role === 'user' ? '#3b82f6' : '#1f2937',
+                  border: msg.role === 'user' ? 'none' : '1px solid #374151'
+                }}>
                   {msg.image && (
-                    <img src={msg.image} alt="Sent" className="rounded-lg mb-2 max-w-full h-32 object-cover" />
+                    <img 
+                      src={msg.image} 
+                      alt="Sent" 
+                      style={{ borderRadius: '0.5rem', marginBottom: '0.5rem', maxWidth: '100%', maxHeight: '200px' }} 
+                    />
                   )}
-                  <p>{msg.content}</p>
-                  <p className="text-xs opacity-60 mt-2">
+                  <div>{msg.content}</div>
+                  <div style={{ fontSize: '0.75rem', opacity: 0.6, marginTop: '0.5rem', textAlign: 'right' }}>
                     {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </p>
+                  </div>
                 </div>
 
                 {msg.role === 'user' && (
-                  <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
-                    <Icons.User />
+                  <div style={{ width: '2rem', height: '2rem', borderRadius: '50%', backgroundColor: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <User size={16} color="white" />
                   </div>
                 )}
               </div>
             ))}
             
             {loading && (
-              <div className="flex gap-3">
-                <div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center">
-                  <Icons.Bot />
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <div style={{ width: '2rem', height: '2rem', borderRadius: '50%', backgroundColor: '#8b5cf6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Bot size={16} color="white" />
                 </div>
-                <div className="bg-gray-800 rounded-2xl p-4">
-                  <div className="flex gap-1">
-                    <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                    <div className="w-2 h-2 bg-white rounded-full animate-pulse delay-150"></div>
-                    <div className="w-2 h-2 bg-white rounded-full animate-pulse delay-300"></div>
+                <div style={{ backgroundColor: '#1f2937', borderRadius: '1rem', padding: '1rem', border: '1px solid #374151' }}>
+                  <div style={{ display: 'flex', gap: '0.25rem' }}>
+                    <div style={{ width: '0.5rem', height: '0.5rem', backgroundColor: '#8b5cf6', borderRadius: '50%', animation: 'bounce 1s infinite' }}></div>
+                    <div style={{ width: '0.5rem', height: '0.5rem', backgroundColor: '#8b5cf6', borderRadius: '50%', animation: 'bounce 1s infinite 0.2s' }}></div>
+                    <div style={{ width: '0.5rem', height: '0.5rem', backgroundColor: '#8b5cf6', borderRadius: '50%', animation: 'bounce 1s infinite 0.4s' }}></div>
                   </div>
                 </div>
               </div>
@@ -244,35 +257,35 @@ export default function App() {
 
       {/* Image preview */}
       {imagePreview && (
-        <div className="px-4 py-2">
-          <div className="relative inline-block">
-            <img src={imagePreview} alt="Preview" className="h-20 rounded-lg" />
+        <div style={{ padding: '0 1rem 0.5rem' }}>
+          <div style={{ position: 'relative', display: 'inline-block' }}>
+            <img src={imagePreview} alt="Preview" style={{ height: '5rem', borderRadius: '0.5rem' }} />
             <button
               onClick={removeImage}
-              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
+              style={{ position: 'absolute', top: '-0.5rem', right: '-0.5rem', backgroundColor: '#ef4444', color: 'white', borderRadius: '50%', width: '1.5rem', height: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer' }}
             >
-              <Icons.X />
+              <X size={12} />
             </button>
           </div>
         </div>
       )}
 
       {/* Input area */}
-      <div className="bg-gray-800 p-4 border-t border-gray-700">
-        <div className="flex gap-2">
+      <div style={styles.inputArea}>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end' }}>
           <input
             ref={fileInputRef}
             type="file"
             accept="image/*"
             onChange={handleImageSelect}
-            className="hidden"
+            style={{ display: 'none' }}
           />
+          
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="p-3 bg-gray-700 rounded-xl"
-            title="Upload image"
+            style={{ padding: '0.75rem', backgroundColor: '#374151', border: '1px solid #4b5563', borderRadius: '0.75rem', color: '#d1d5db', cursor: 'pointer', flexShrink: 0 }}
           >
-            <Icons.Image />
+            <Image size={20} />
           </button>
 
           <textarea
@@ -280,19 +293,45 @@ export default function App() {
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Type your message..."
-            className="flex-1 bg-gray-700 rounded-xl p-3 resize-none focus:outline-none"
+            style={{ 
+              flex: 1, 
+              backgroundColor: '#374151', 
+              color: 'white', 
+              padding: '0.75rem', 
+              borderRadius: '0.75rem', 
+              border: '1px solid #4b5563',
+              resize: 'none' as const,
+              minHeight: '3rem',
+              fontFamily: 'inherit'
+            }}
             rows={1}
           />
 
           <button
             onClick={handleSend}
             disabled={loading || (!input.trim() && !imagePreview)}
-            className="p-3 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 rounded-xl"
+            style={{ 
+              padding: '0.75rem', 
+              backgroundColor: '#8b5cf6', 
+              border: 'none', 
+              borderRadius: '0.75rem', 
+              color: 'white', 
+              cursor: 'pointer',
+              opacity: (loading || (!input.trim() && !imagePreview)) ? 0.5 : 1,
+              flexShrink: 0
+            }}
           >
-            <Icons.Send />
+            <Send size={20} />
           </button>
         </div>
       </div>
+
+      <style>{`
+        @keyframes bounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-4px); }
+        }
+      `}</style>
     </div>
   );
 }
