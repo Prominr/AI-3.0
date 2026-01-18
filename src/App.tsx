@@ -1,36 +1,34 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Image, X, Bot, User, Trash2 } from 'lucide-react';
 
-interface Message {
-  role: 'user' | 'assistant';
-  content: string;
-  image?: string | null;
-  timestamp: Date;
-}
+// Using emojis instead of lucide-react to avoid potential issues
+const Icons = {
+  Send: () => '➤',
+  Image: () => '🖼️',
+  X: () => '✕',
+  Bot: () => '🤖',
+  User: () => '👤',
+  Trash: () => '🗑️'
+};
 
-export default function App() {
-  const [messages, setMessages] = useState<Message[]>([]);
+function App() {
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [responseMode, setResponseMode] = useState<'fast' | 'expert'>('fast');
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  const [responseMode, setResponseMode] = useState('fast');
+  const messagesEndRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
-    scrollToBottom();
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageSelect = (e) => {
     const file = e.target.files?.[0];
     if (file && file.type.startsWith('image/')) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImagePreview(reader.result as string);
+        setImagePreview(reader.result);
       };
       reader.readAsDataURL(file);
     }
@@ -45,34 +43,22 @@ export default function App() {
     setMessages([]);
   };
 
-  const simulateAIResponse = async (userInput: string): Promise<string> => {
+  const simulateAIResponse = async () => {
     await new Promise(resolve => setTimeout(resolve, 800));
     
-    if (responseMode === 'fast') {
-      const responses = [
-        "Yo! What's up?",
-        "Hmm interesting... tell me more!",
-        "That's cool! 😎",
-        "Not sure about that one tbh",
-        "Aight, I got you"
-      ];
-      return responses[Math.floor(Math.random() * responses.length)];
-    } else {
-      const responses = [
-        "Based on my analysis, there are multiple factors to consider...",
-        "This requires understanding of several key principles...",
-        "Let me provide a comprehensive explanation...",
-        "From a technical perspective, the underlying mechanism involves...",
-        "I can offer detailed insights on this topic..."
-      ];
-      return responses[Math.floor(Math.random() * responses.length)];
-    }
+    const responses = {
+      fast: ["Yo! What's up?", "Cool!", "Tell me more!", "Interesting!", "Hmm..."],
+      expert: ["Based on my analysis...", "Let me explain...", "There are several factors...", "From a technical perspective...", "I can provide detailed insights..."]
+    };
+    
+    const modeResponses = responseMode === 'fast' ? responses.fast : responses.expert;
+    return modeResponses[Math.floor(Math.random() * modeResponses.length)];
   };
 
   const handleSend = async () => {
     if (!input.trim() && !imagePreview) return;
 
-    const userMessage: Message = {
+    const userMessage = {
       role: 'user',
       content: input || '(sent an image)',
       image: imagePreview,
@@ -83,9 +69,9 @@ export default function App() {
     setInput('');
     setLoading(true);
 
-    const aiResponse = await simulateAIResponse(input);
+    const aiResponse = await simulateAIResponse();
     
-    const assistantMessage: Message = {
+    const assistantMessage = {
       role: 'assistant',
       content: aiResponse,
       timestamp: new Date()
@@ -96,73 +82,71 @@ export default function App() {
     removeImage();
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
   };
 
-  const styles = {
-    container: {
-      display: 'flex',
-      flexDirection: 'column' as const,
-      height: '100vh',
-      backgroundColor: '#111827'
-    },
-    header: {
-      backgroundColor: '#1f2937',
-      padding: '1rem',
-      borderBottom: '1px solid #374151'
-    },
-    chatArea: {
-      flex: 1,
-      overflow: 'auto' as const,
-      padding: '1rem'
-    },
-    messageBubble: {
-      maxWidth: '70%',
-      padding: '1rem',
-      borderRadius: '1rem',
-      marginBottom: '0.5rem'
-    },
-    inputArea: {
-      backgroundColor: '#1f2937',
-      padding: '1rem',
-      borderTop: '1px solid #374151'
-    }
-  };
-
   return (
-    <div style={styles.container}>
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      height: '100vh',
+      backgroundColor: '#111827',
+      color: 'white',
+      fontFamily: 'system-ui, -apple-system, sans-serif'
+    }}>
       {/* Header */}
-      <div style={styles.header}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '50%', background: 'linear-gradient(to right, #8b5cf6, #ec4899)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Bot size={20} color="white" />
+      <div style={{
+        backgroundColor: '#1f2937',
+        padding: '16px',
+        borderBottom: '1px solid #374151'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              background: 'linear-gradient(to right, #8b5cf6, #ec4899)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '20px'
+            }}>
+              {Icons.Bot()}
             </div>
             <div>
-              <div style={{ fontWeight: 'bold', fontSize: '1.25rem' }}>AI Assistant</div>
-              <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>TypeScript + React</div>
+              <div style={{ fontWeight: 'bold', fontSize: '20px' }}>AI Assistant</div>
+              <div style={{ fontSize: '12px', color: '#9ca3af' }}>Chat Interface</div>
             </div>
           </div>
           <button 
             onClick={clearChat}
-            style={{ padding: '0.5rem', backgroundColor: '#374151', border: '1px solid #4b5563', borderRadius: '0.5rem', color: '#d1d5db', cursor: 'pointer' }}
+            style={{
+              padding: '8px',
+              backgroundColor: '#374151',
+              border: '1px solid #4b5563',
+              borderRadius: '8px',
+              color: '#d1d5db',
+              cursor: 'pointer',
+              fontSize: '16px'
+            }}
           >
-            <Trash2 size={20} />
+            {Icons.Trash()}
           </button>
         </div>
 
         {/* Mode selector */}
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
+        <div style={{ display: 'flex', gap: '8px' }}>
           <button
             onClick={() => setResponseMode('fast')}
             style={{
               flex: 1,
-              padding: '0.5rem',
-              borderRadius: '0.5rem',
+              padding: '8px',
+              borderRadius: '8px',
               border: 'none',
               backgroundColor: responseMode === 'fast' ? '#8b5cf6' : '#374151',
               color: 'white',
@@ -175,8 +159,8 @@ export default function App() {
             onClick={() => setResponseMode('expert')}
             style={{
               flex: 1,
-              padding: '0.5rem',
-              borderRadius: '0.5rem',
+              padding: '8px',
+              borderRadius: '8px',
               border: 'none',
               backgroundColor: responseMode === 'expert' ? '#8b5cf6' : '#374151',
               color: 'white',
@@ -189,29 +173,55 @@ export default function App() {
       </div>
 
       {/* Chat messages */}
-      <div style={styles.chatArea}>
+      <div style={{
+        flex: 1,
+        overflow: 'auto',
+        padding: '16px'
+      }}>
         {messages.length === 0 ? (
           <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ width: '5rem', height: '5rem', borderRadius: '50%', background: 'linear-gradient(to right, #8b5cf6, #ec4899)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
-                <Bot size={40} color="white" />
+              <div style={{
+                width: '80px',
+                height: '80px',
+                borderRadius: '50%',
+                background: 'linear-gradient(to right, #8b5cf6, #ec4899)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 16px',
+                fontSize: '32px'
+              }}>
+                {Icons.Bot()}
               </div>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>Start a conversation</h2>
+              <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '8px' }}>Start a conversation</h2>
               <p style={{ color: '#9ca3af' }}>Type a message to begin chatting</p>
             </div>
           </div>
         ) : (
           <>
             {messages.map((msg, idx) => (
-              <div key={idx} style={{ display: 'flex', gap: '0.75rem', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start', marginBottom: '1rem' }}>
+              <div key={idx} style={{ display: 'flex', gap: '12px', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start', marginBottom: '16px' }}>
                 {msg.role === 'assistant' && (
-                  <div style={{ width: '2rem', height: '2rem', borderRadius: '50%', backgroundColor: '#8b5cf6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Bot size={16} color="white" />
+                  <div style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    backgroundColor: '#8b5cf6',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                    fontSize: '14px'
+                  }}>
+                    {Icons.Bot()}
                   </div>
                 )}
                 
                 <div style={{
-                  ...styles.messageBubble,
+                  maxWidth: '70%',
+                  padding: '16px',
+                  borderRadius: '16px',
                   backgroundColor: msg.role === 'user' ? '#3b82f6' : '#1f2937',
                   border: msg.role === 'user' ? 'none' : '1px solid #374151'
                 }}>
@@ -219,33 +229,70 @@ export default function App() {
                     <img 
                       src={msg.image} 
                       alt="Sent" 
-                      style={{ borderRadius: '0.5rem', marginBottom: '0.5rem', maxWidth: '100%', maxHeight: '200px' }} 
+                      style={{ borderRadius: '8px', marginBottom: '8px', maxWidth: '100%', maxHeight: '200px' }} 
                     />
                   )}
                   <div>{msg.content}</div>
-                  <div style={{ fontSize: '0.75rem', opacity: 0.6, marginTop: '0.5rem', textAlign: 'right' }}>
+                  <div style={{ fontSize: '12px', opacity: 0.6, marginTop: '8px', textAlign: 'right' }}>
                     {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </div>
                 </div>
 
                 {msg.role === 'user' && (
-                  <div style={{ width: '2rem', height: '2rem', borderRadius: '50%', backgroundColor: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <User size={16} color="white" />
+                  <div style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    backgroundColor: '#3b82f6',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                    fontSize: '14px'
+                  }}>
+                    {Icons.User()}
                   </div>
                 )}
               </div>
             ))}
             
             {loading && (
-              <div style={{ display: 'flex', gap: '0.75rem' }}>
-                <div style={{ width: '2rem', height: '2rem', borderRadius: '50%', backgroundColor: '#8b5cf6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Bot size={16} color="white" />
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  backgroundColor: '#8b5cf6',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '14px'
+                }}>
+                  {Icons.Bot()}
                 </div>
-                <div style={{ backgroundColor: '#1f2937', borderRadius: '1rem', padding: '1rem', border: '1px solid #374151' }}>
-                  <div style={{ display: 'flex', gap: '0.25rem' }}>
-                    <div style={{ width: '0.5rem', height: '0.5rem', backgroundColor: '#8b5cf6', borderRadius: '50%', animation: 'bounce 1s infinite' }}></div>
-                    <div style={{ width: '0.5rem', height: '0.5rem', backgroundColor: '#8b5cf6', borderRadius: '50%', animation: 'bounce 1s infinite 0.2s' }}></div>
-                    <div style={{ width: '0.5rem', height: '0.5rem', backgroundColor: '#8b5cf6', borderRadius: '50%', animation: 'bounce 1s infinite 0.4s' }}></div>
+                <div style={{ backgroundColor: '#1f2937', borderRadius: '16px', padding: '16px', border: '1px solid #374151' }}>
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    <div style={{
+                      width: '8px',
+                      height: '8px',
+                      backgroundColor: '#8b5cf6',
+                      borderRadius: '50%',
+                      animation: 'bounce 1s infinite'
+                    }}></div>
+                    <div style={{
+                      width: '8px',
+                      height: '8px',
+                      backgroundColor: '#8b5cf6',
+                      borderRadius: '50%',
+                      animation: 'bounce 1s infinite 0.2s'
+                    }}></div>
+                    <div style={{
+                      width: '8px',
+                      height: '8px',
+                      backgroundColor: '#8b5cf6',
+                      borderRadius: '50%',
+                      animation: 'bounce 1s infinite 0.4s'
+                    }}></div>
                   </div>
                 </div>
               </div>
@@ -257,22 +304,41 @@ export default function App() {
 
       {/* Image preview */}
       {imagePreview && (
-        <div style={{ padding: '0 1rem 0.5rem' }}>
+        <div style={{ padding: '0 16px 8px' }}>
           <div style={{ position: 'relative', display: 'inline-block' }}>
-            <img src={imagePreview} alt="Preview" style={{ height: '5rem', borderRadius: '0.5rem' }} />
+            <img src={imagePreview} alt="Preview" style={{ height: '80px', borderRadius: '8px' }} />
             <button
               onClick={removeImage}
-              style={{ position: 'absolute', top: '-0.5rem', right: '-0.5rem', backgroundColor: '#ef4444', color: 'white', borderRadius: '50%', width: '1.5rem', height: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer' }}
+              style={{
+                position: 'absolute',
+                top: '-8px',
+                right: '-8px',
+                backgroundColor: '#ef4444',
+                color: 'white',
+                borderRadius: '50%',
+                width: '24px',
+                height: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '12px'
+              }}
             >
-              <X size={12} />
+              {Icons.X()}
             </button>
           </div>
         </div>
       )}
 
       {/* Input area */}
-      <div style={styles.inputArea}>
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end' }}>
+      <div style={{
+        backgroundColor: '#1f2937',
+        padding: '16px',
+        borderTop: '1px solid #374151'
+      }}>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
           <input
             ref={fileInputRef}
             type="file"
@@ -283,9 +349,19 @@ export default function App() {
           
           <button
             onClick={() => fileInputRef.current?.click()}
-            style={{ padding: '0.75rem', backgroundColor: '#374151', border: '1px solid #4b5563', borderRadius: '0.75rem', color: '#d1d5db', cursor: 'pointer', flexShrink: 0 }}
+            style={{
+              padding: '12px',
+              backgroundColor: '#374151',
+              border: '1px solid #4b5563',
+              borderRadius: '12px',
+              color: '#d1d5db',
+              cursor: 'pointer',
+              flexShrink: 0,
+              fontSize: '16px',
+              height: '48px'
+            }}
           >
-            <Image size={20} />
+            {Icons.Image()}
           </button>
 
           <textarea
@@ -297,12 +373,13 @@ export default function App() {
               flex: 1, 
               backgroundColor: '#374151', 
               color: 'white', 
-              padding: '0.75rem', 
-              borderRadius: '0.75rem', 
+              padding: '12px', 
+              borderRadius: '12px', 
               border: '1px solid #4b5563',
-              resize: 'none' as const,
-              minHeight: '3rem',
-              fontFamily: 'inherit'
+              resize: 'none',
+              minHeight: '48px',
+              fontFamily: 'inherit',
+              fontSize: '14px'
             }}
             rows={1}
           />
@@ -311,17 +388,19 @@ export default function App() {
             onClick={handleSend}
             disabled={loading || (!input.trim() && !imagePreview)}
             style={{ 
-              padding: '0.75rem', 
+              padding: '12px', 
               backgroundColor: '#8b5cf6', 
               border: 'none', 
-              borderRadius: '0.75rem', 
+              borderRadius: '12px', 
               color: 'white', 
               cursor: 'pointer',
               opacity: (loading || (!input.trim() && !imagePreview)) ? 0.5 : 1,
-              flexShrink: 0
+              flexShrink: 0,
+              fontSize: '16px',
+              height: '48px'
             }}
           >
-            <Send size={20} />
+            {Icons.Send()}
           </button>
         </div>
       </div>
@@ -335,3 +414,5 @@ export default function App() {
     </div>
   );
 }
+
+export default App;
