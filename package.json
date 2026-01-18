@@ -1,9 +1,7 @@
 {
   "name": "ai-chat",
   "version": "1.0.0",
-  "description": "AI Chat Interface",
-  "main": "src/index.tsx",
-  "homepage": ".",
+  "private": true,
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -17,7 +15,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "CI=false react-scripts build",
+    "build": "CI=false GENERATE_SOURCEMAP=false react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
@@ -32,9 +30,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "engines": {
-    "node": "18.x",
-    "npm": "9.x"
   }
 }
