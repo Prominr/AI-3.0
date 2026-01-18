@@ -1,0 +1,22 @@
+{
+  "name": "ai-chat-claude",
+  "env": [
+    {
+      "key": "REACT_APP_CLAUDE_API_KEY",
+      "value": "YOUR_CLAUDE_API_KEY"
+    }
+  ],
+  "routes": [
+    {
+      "path": "/",
+      "port": 3000
+    }
+  ],
+  "docker": {
+    "build": {
+      "args": {
+        "REACT_APP_CLAUDE_API_KEY": "$REACT_APP_CLAUDE_API_KEY"
+      }
+    }
+  }
+}
